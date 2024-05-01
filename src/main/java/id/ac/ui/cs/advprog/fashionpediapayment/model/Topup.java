@@ -14,7 +14,7 @@ import java.util.UUID;
 public class Topup {
     @Id @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "topup_id")
-    private UUID topupId;
+    private String topupId;
 
     @Column(name = "buyer_id", nullable = false)
     private String buyerId;
