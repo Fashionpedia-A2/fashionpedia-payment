@@ -13,7 +13,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.sql.Timestamp;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -25,6 +28,9 @@ public class TopupServiceTest {
 
     @Autowired
     TopupRepository topupRepository;
+
+    static Timestamp afterFirst;
+    static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH-mm-ss");
 
     @BeforeAll
     static void setUp() {}
@@ -43,6 +49,8 @@ public class TopupServiceTest {
         assertEquals(repoTopup.getAccountNumber(), topup.getAccountNumber());
         assertEquals(repoTopup.getBankName(), topup.getBankName());
         assertEquals(repoTopup.getMethod(), topup.getMethod());
+
+        afterFirst = new Timestamp(System.currentTimeMillis());
     }
 
     @Test
@@ -65,15 +73,15 @@ public class TopupServiceTest {
 
 
     @Test
-    void testGetAllTopups() {
-        List<Topup> topups = topupService.getTopups(null);
+    void testGetAllTopups() throws ExecutionException, InterruptedException {
+        List<Topup> topups = topupService.getTopups(null, null, null).get();
         assertNotNull(topups);
         assertEquals(topups.size(), 2);
     }
 
     @Test
-    void testGetAllTopupsWithBuyerID() {
-        List<Topup> topups = topupService.getTopups("test_buyer1");
+    void testGetAllTopupsWithBuyerID() throws ExecutionException, InterruptedException {
+        List<Topup> topups = topupService.getTopups("test_buyer1", null, null).get();
         assertNotNull(topups);
         assertEquals(topups.size(), 1);
         Topup topup1 = topups.getFirst();
@@ -82,20 +90,42 @@ public class TopupServiceTest {
     }
 
     @Test
-    void testCancelTopup() {
-        List<Topup> topups = topupService.getTopups("test_buyer1");
+    void testCancelTopup() throws ExecutionException, InterruptedException {
+        List<Topup> topups = topupService.getTopups("test_buyer1", null, null).get();
         Topup topup1 = topups.getFirst();
         topup1 = topupService.cancelTopup(topup1.getBuyerId());
         assertEquals(topup1.getApproval(), "CANCELLED");
     }
 
     @Test
-    void testDeleteTopup() {
-        List<Topup> topups = topupService.getTopups("test_buyer2");
+    void testFilterByApproval() throws ExecutionException, InterruptedException{
+        List<Topup> topups = topupService.getTopups(null, "PENDING", null).get();
+        assertNotNull(topups);
+        assertEquals(topups.size(), 1);
         Topup topup1 = topups.getFirst();
-        topup1 = topupService.deleteTopup(topup1.getBuyerId());
+        topup1 = topupService.cancelTopup(topup1.getBuyerId());
+        assertEquals(topup1.getApproval(), "PENDING");
+    }
 
-        topups = topupService.getTopups("test_buyer2");
+    @Test
+    void testFilterByDate() throws ExecutionException, InterruptedException {
+        String date = afterFirst.toLocalDateTime().format(formatter);
+        List<Topup> topups = topupService.getTopups(null, null, date).get();
+
+        assertNotNull(topups);
+        assertEquals(topups.size(), 1);
+        Topup topup1 = topups.getFirst();
+        topup1 = topupService.cancelTopup(topup1.getBuyerId());
+        assertEquals(topup1.getBuyerId(), "test_buyer2");
+    }
+
+    @Test
+    void testDeleteTopup() throws ExecutionException, InterruptedException {
+        List<Topup> topups = topupService.getTopups("test_buyer2", null, null).get();
+        Topup topup1 = topups.getFirst();
+        topupService.deleteTopup(topup1.getBuyerId());
+
+        topups = topupService.getTopups("test_buyer2", null, null).get();
         assertEquals(topups.size(), 0);
     }
 }
