@@ -1,5 +1,6 @@
 package id.ac.ui.cs.advprog.fashionpediapayment.service;
 
+import id.ac.ui.cs.advprog.fashionpediapayment.builder.TopupBuilder;
 import id.ac.ui.cs.advprog.fashionpediapayment.model.Topup;
 import id.ac.ui.cs.advprog.fashionpediapayment.repository.TopupRepository;
 import jakarta.transaction.Transactional;
@@ -26,13 +27,17 @@ public class TopupService {
 
     public Topup createTopup (
             String buyerId, String method, String bankName, String accountNumber, long nominal, String photo_proof) {
-        Topup topup;
-        if (photo_proof == null) {
-            topup = new Topup(buyerId, method, bankName, accountNumber, nominal);
+        TopupBuilder topupBuilder = new TopupBuilder()
+                .setBuyerId(buyerId)
+                .setMethod(method)
+                .setBankName(bankName)
+                .setAccountNumber(accountNumber)
+                .setNominal(nominal);
+        if (photo_proof != null) {
+            topupBuilder = topupBuilder.setPhotoProof(photo_proof);
         }
-        else {
-            topup = new Topup(buyerId, method, bankName, accountNumber, nominal, photo_proof);
-        }
+
+        Topup topup = topupBuilder.build();
         topupRepository.save(topup);
         return topup;
     }
