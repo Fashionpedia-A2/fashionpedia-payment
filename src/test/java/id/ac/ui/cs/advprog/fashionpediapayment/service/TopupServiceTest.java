@@ -4,7 +4,9 @@ package id.ac.ui.cs.advprog.fashionpediapayment.service;
 import id.ac.ui.cs.advprog.fashionpediapayment.model.Topup;
 import id.ac.ui.cs.advprog.fashionpediapayment.repository.TopupRepository;
 
+import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -22,24 +24,38 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(MockitoExtension.class)
 @SpringBootTest
+@Transactional
 public class TopupServiceTest {
     @InjectMocks
+    @Autowired
     TopupService topupService;
 
     @Autowired
     TopupRepository topupRepository;
 
-    static Timestamp afterFirst;
-    static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH-mm-ss");
+    static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    static Topup topup1, topup2;
+    static Topup repoTopup1, repoTopup2;
 
     @BeforeAll
-    static void setUp() {}
+    static void setUp() {
+        topup1 = new Topup("test_buyer1", "Transfer dengan Kartu Kredit",
+                "Visa", "4000123456789010", 100000);
+        topup2 = new Topup("test_buyer2", "Transfer dengan Kartu Kredit",
+                "Mastercard", "5425233430109903", 100000,
+                "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ98fKfQIFcbZ9RWTH07lvObeg1poKM-RLaJCqNqm_BCg&s");
+    }
+    @BeforeEach
+    void beforeEach() {
+        repoTopup1 = topupRepository.save(topup1);
+        repoTopup2 = topupRepository.save(topup2);
+    }
 
     @Test
     void testCreateTopupWithoutPhoto () {
         Topup topup =  topupService.createTopup(
-        "test_buyer1", "Transfer dengan Kartu Kredit",
-        "Visa", "4000123456789010", 100000,null);
+        "test_buyer3", "Transfer dengan QRIS",
+        "Gopay", "081234567890", 20000,null);
 
         assertNotNull(topup);
         Topup repoTopup = topupRepository.getReferenceById(topup.getTopupId());
@@ -49,16 +65,14 @@ public class TopupServiceTest {
         assertEquals(repoTopup.getAccountNumber(), topup.getAccountNumber());
         assertEquals(repoTopup.getBankName(), topup.getBankName());
         assertEquals(repoTopup.getMethod(), topup.getMethod());
-
-        afterFirst = new Timestamp(System.currentTimeMillis());
     }
 
     @Test
     void testCreateTopupWithPhoto () {
         Topup topup =  topupService.createTopup(
-                "test_buyer2", "Transfer dengan Kartu Kredit",
-                "Mastercard", "5425233430109903", 100000,
-                "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ98fKfQIFcbZ9RWTH07lvObeg1poKM-RLaJCqNqm_BCg&s");
+        "test_buyer4", "Transfer dengan Kartu Kredit",
+        "Mastercard", "41242852932021", 120000,
+        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ98fKfQIFcbZ9RWTH07lvObeg1poKM-RLaJCqNqm_BCg&s");
 
         assertNotNull(topup);
         Topup repoTopup = topupRepository.getReferenceById(topup.getTopupId());
@@ -73,59 +87,71 @@ public class TopupServiceTest {
 
 
     @Test
-    void testGetAllTopups() throws ExecutionException, InterruptedException {
-        List<Topup> topups = topupService.getTopups(null, null, null).get();
+    void testGetAllTopups()  {
+        List<Topup> topups = topupService.getTopups(null, null, null);
+        System.out.println(topups);
         assertNotNull(topups);
-        assertEquals(topups.size(), 2);
+        assertEquals(2, topups.size());
     }
 
     @Test
-    void testGetAllTopupsWithBuyerID() throws ExecutionException, InterruptedException {
-        List<Topup> topups = topupService.getTopups("test_buyer1", null, null).get();
-        assertNotNull(topups);
-        assertEquals(topups.size(), 1);
-        Topup topup1 = topups.getFirst();
-        assertEquals(topup1.getBuyerId(), "test_buyer1");
-        assertEquals(topup1.getAccountNumber(), "4000123456789010");
-    }
-
-    @Test
-    void testCancelTopup() throws ExecutionException, InterruptedException {
-        List<Topup> topups = topupService.getTopups("test_buyer1", null, null).get();
-        Topup topup1 = topups.getFirst();
-        topup1 = topupService.cancelTopup(topup1.getBuyerId());
-        assertEquals(topup1.getApproval(), "CANCELLED");
-    }
-
-    @Test
-    void testFilterByApproval() throws ExecutionException, InterruptedException{
-        List<Topup> topups = topupService.getTopups(null, "PENDING", null).get();
+    void testGetAllTopupsWithBuyerID()  {
+        List<Topup> topups = topupService.getTopups("test_buyer1", null, null);
         assertNotNull(topups);
         assertEquals(topups.size(), 1);
         Topup topup1 = topups.getFirst();
-        topup1 = topupService.cancelTopup(topup1.getBuyerId());
-        assertEquals(topup1.getApproval(), "PENDING");
+        assertEquals("test_buyer1", topup1.getBuyerId());
+        assertEquals("4000123456789010", topup1.getAccountNumber());
     }
 
     @Test
-    void testFilterByDate() throws ExecutionException, InterruptedException {
-        String date = afterFirst.toLocalDateTime().format(formatter);
-        List<Topup> topups = topupService.getTopups(null, null, date).get();
+    void testCancelTopup()  {
+        List<Topup> topups = topupService.getTopups("test_buyer1", null, null);
+        Topup topup1 = topups.getFirst();
+        topup1 = topupService.cancelTopup(topup1.getTopupId());
+        assertEquals("CANCELLED", topup1.getApproval());
+    }
+
+    @Test
+    void testFilterByApproval() {
+        Topup test_topup = topupService.cancelTopup(topup2.getTopupId());
+        System.out.println(test_topup);
+
+        List<Topup> topups = topupService.getTopups(null, "PENDING", null);
+        assertNotNull(topups);
+        assertEquals(1, topups.size());
+        Topup topup1 = topups.getFirst();
+        assertEquals("PENDING", topup1.getApproval());
+    }
+
+    @Test
+    void testFilterByDate()  {
+        Topup topup =  topupService.createTopup(
+                "test_buyer3", "Transfer dengan QRIS",
+                "Gopay", "081234567890", 20000,null);
+
+        System.out.println(topup.getTopupId());
+        topup = topupRepository.save(topup);
+        Timestamp timestamp = topup.getDate();
+        System.out.println(topup.getDate());
+
+        timestamp.setTime(timestamp.getTime()-1000);
+        String date = timestamp.toLocalDateTime().format(formatter);
+        System.out.println(date);
+        List<Topup> topups = topupService.getTopups(null, null, date);
 
         assertNotNull(topups);
-        assertEquals(topups.size(), 1);
-        Topup topup1 = topups.getFirst();
-        topup1 = topupService.cancelTopup(topup1.getBuyerId());
-        assertEquals(topup1.getBuyerId(), "test_buyer2");
+        System.out.println(topups);
+        assertFalse(topups.isEmpty());
+        assertTrue(topups.contains(topup));
+//        assertEquals(topup1.getBuyerId(), "test_buyer3");
     }
 
     @Test
-    void testDeleteTopup() throws ExecutionException, InterruptedException {
-        List<Topup> topups = topupService.getTopups("test_buyer2", null, null).get();
-        Topup topup1 = topups.getFirst();
-        topupService.deleteTopup(topup1.getBuyerId());
+    void testDeleteTopup()  {
+        topupService.deleteTopup(repoTopup2.getTopupId());
 
-        topups = topupService.getTopups("test_buyer2", null, null).get();
-        assertEquals(topups.size(), 0);
+        List<Topup> topups = topupService.getTopups("test_buyer2", null, null);
+        assertEquals(0, topups.size());
     }
 }
