@@ -1,5 +1,7 @@
 package id.ac.ui.cs.advprog.fashionpediapayment.model;
 
+import com.fasterxml.jackson.databind.PropertyNamingStrategy;
+import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import jakarta.persistence.*;
 
 import lombok.Getter;
@@ -8,6 +10,7 @@ import lombok.Setter;
 import java.sql.Timestamp;
 import java.util.UUID;
 
+@JsonNaming(PropertyNamingStrategy.SnakeCaseStrategy.class)
 @Setter @Getter
 @Entity
 @Table(name = "topup")

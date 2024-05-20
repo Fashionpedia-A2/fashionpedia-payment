@@ -26,12 +26,14 @@ public class TopupSearchRequest implements PaymentServiceRequest {
 
 
     public boolean checkValidity() {
-        DateTimeFormatter dateTimeFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-        // check date
-        try {
-            LocalDateTime.parse(afterDate, dateTimeFormat);
-        } catch (DateTimeParseException e) {
-            return false;
+        if (afterDate != null) {
+            DateTimeFormatter dateTimeFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            // check date
+            try {
+                LocalDateTime.parse(afterDate, dateTimeFormat);
+            } catch (DateTimeParseException e) {
+                return false;
+            }
         }
         return true;
     }
