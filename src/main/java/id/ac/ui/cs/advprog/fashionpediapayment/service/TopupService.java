@@ -12,6 +12,7 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -26,15 +27,15 @@ public class TopupService {
     final static DateTimeFormatter dateTimeFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     public Topup createTopup (
-            String buyerId, String method, String bankName, String accountNumber, long nominal, String photo_proof) {
+            String buyerId, String method, String bankName, String accountNumber, long nominal, String photoProof) {
         TopupBuilder topupBuilder = new TopupBuilder()
                 .setBuyerId(buyerId)
                 .setMethod(method)
                 .setBankName(bankName)
                 .setAccountNumber(accountNumber)
                 .setNominal(nominal);
-        if (photo_proof != null) {
-            topupBuilder = topupBuilder.setPhotoProof(photo_proof);
+        if (photoProof != null) {
+            topupBuilder = topupBuilder.setPhotoProof(photoProof);
         }
 
         Topup topup = topupBuilder.build();
@@ -42,14 +43,14 @@ public class TopupService {
         return topup;
     }
 
-    public List<Topup> getTopups(String buyerId, String approval, String after_date) {
+    public List<Topup> getTopups(String buyerId, String approval, String afterDate) {
         double seconds = 0;
-        if (after_date != null) {
+        if (afterDate != null) {
             LocalDateTime localDateTime;
             try {
-                localDateTime = LocalDateTime.parse(after_date, dateTimeFormat);
+                localDateTime = LocalDateTime.parse(afterDate, dateTimeFormat);
             } catch (DateTimeParseException e) {
-                return null;
+                return new ArrayList<>();
             }
             Timestamp timestamp = Timestamp.valueOf(localDateTime);
             System.out.println(timestamp);
