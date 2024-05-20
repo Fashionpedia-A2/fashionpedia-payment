@@ -11,5 +11,6 @@ ENV JDBC_DATABASE_USERNAME ${JDBC_DATABASE_USERNAME}
 
 WORKDIR /app
 COPY ./build/libs/Fashionpedia-Payment-0.0.1-dev.jar /app
+COPY ./docker-compose.yml /app
 EXPOSE 8080
 CMD ["java","-jar","Fashionpedia-Payment-0.0.1-dev.jar"]
