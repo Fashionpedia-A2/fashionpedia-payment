@@ -1,10 +1,7 @@
 package id.ac.ui.cs.advprog.fashionpediapayment.dto.request;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
+import lombok.*;
 
 
 @Data
