@@ -1,4 +1,4 @@
-FROM gradle:jdk17-alpine
+FROM gradle:jdk21-alpine
 ARG PRODUCTION
 ARG JDBC_DATABASE_PASSWORD
 ARG JDBC_DATABASE_URL
@@ -10,6 +10,6 @@ ENV JDBC_DATABASE_URL ${JDBC_DATABASE_URL}
 ENV JDBC_DATABASE_USERNAME ${JDBC_DATABASE_USERNAME}
 
 WORKDIR /app
-COPY ./build/libs/Fashionpedia-Payment-0.0.1-SNAPSHOT.jar /app
+COPY ./build/libs/Fashionpedia-Payment-0.0.1-dev.jar /app
 EXPOSE 8080
-CMD ["java","-jar","Fashionpedia-Payment-0.0.1-SNAPSHOT.jar"]
+CMD ["java","-jar","Fashionpedia-Payment-0.0.1-dev.jar"]

@@ -1,9 +1,9 @@
-name: CI & CD Staging
+name: CI & CD Main
 
 on:
   push:
     branches:
-      - staging
+      - main
 
 jobs:
 
