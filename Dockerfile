@@ -1,4 +1,6 @@
 FROM gradle:jdk21-alpine
+FROM docker
+
 ARG PRODUCTION
 ARG JDBC_DATABASE_PASSWORD
 ARG JDBC_DATABASE_URL
@@ -14,8 +16,4 @@ COPY ./build/libs/Fashionpedia-Payment-0.0.1-dev.jar /app
 COPY ./docker-compose.yml /app
 
 EXPOSE 8080
-
-ENV PATH="/usr/bin:$PATH"
-RUN echo $PATH
-
 CMD ["java","-jar","Fashionpedia-Payment-0.0.1-dev.jar"]
