@@ -8,9 +8,6 @@ services:
       JDBC_DATABASE_URL: ${JDBC_DATABASE_URL}
       JDBC_DATABASE_USERNAME: ${JDBC_DATABASE_USERNAME}
       JDBC_DATABASE_PASSWORD: ${JDBC_DATABASE_PASSWORD}
-    build:
-      context: .
-      dockerfile: Dockerfile
     container_name: container-advprog
     ports:
       - "80:8080"
