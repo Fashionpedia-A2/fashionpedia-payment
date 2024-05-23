@@ -137,12 +137,12 @@ jobs:
         run: |
           scp -o StrictHostKeyChecking=no -i gcp_ssh_key -r ./docker-compose.yml ./monitoring ${{ secrets.GCP_USERNAME }}@${{ secrets.GCP_STATIC_IP }}:~/
           ssh -o StrictHostKeyChecking=no -i gcp_ssh_key ${{ secrets.GCP_USERNAME }}@${{ secrets.GCP_STATIC_IP }} "
-            export REGISTRY_USER=${{ secrets.REGISTRY_USER }} && \
-            export IMAGE_NAME=${{ secrets.IMAGE_NAME }} && \
-            export IMAGE_TAG=${{ secrets.IMAGE_TAG }} && \
-            export PRODUCTION=${{ secrets.PRODUCTION }} && \
-            export JDBC_DATABASE_URL=${{ secrets.JDBC_DATABASE_URL }} && \
-            export JDBC_DATABASE_USERNAME=${{ secrets.JDBC_DATABASE_USERNAME }} && \
-            export JDBC_DATABASE_PASSWORD=${{ secrets.JDBC_DATABASE_PASSWORD }} && \
+            echo "PRODUCTION=${{ secrets.PRODUCTION }}
+            JDBC_DATABASE_URL=${{ secrets.JDBC_DATABASE_URL }}
+            JDBC_DATABASE_USERNAME=${{ secrets.JDBC_DATABASE_USERNAME }}
+            JDBC_DATABASE_PASSWORD=${{ secrets.JDBC_DATABASE_PASSWORD }}
+            REGISTRY_USER=${{ secrets.REGISTRY_USER }}
+            IMAGE_NAME=${{ secrets.IMAGE_NAME }}
+            IMAGE_TAG=${{ secrets.IMAGE_TAG }}" > .env && \
             sudo docker compose up -d;
           "
