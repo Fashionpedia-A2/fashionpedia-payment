@@ -2,7 +2,7 @@ version: '3.7'
 
 services:
   payment-service:
-#    image: sefriano/fashionpedia-payment-test
+    image: ${REGISTRY_USER}/${IMAGE_NAME}:${IMAGE_TAG}
     environment:
       PRODUCTION: ${PRODUCTION}
       JDBC_DATABASE_URL: ${JDBC_DATABASE_URL}
