@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - staging
 
 jobs:
 
@@ -22,7 +23,7 @@ jobs:
           cache: "gradle"
 
       - name: Build with Gradle
-        run: chmod +x ./gradlew && ./gradlew build
+        run: chmod +x ./gradlew && ./gradlew assemble && ls
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
@@ -41,9 +42,9 @@ jobs:
         ports:
           - 5432:5432
         env:
-          POSTGRES_DB: ${{ env.POSTGRES_DB }}
-          POSTGRES_USER: ${{ env.POSTGRES_USER }}
-          POSTGRES_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
+          POSTGRES_DB: fashionpedia
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
 
     steps:
       - name: Checkout code
@@ -137,4 +138,4 @@ jobs:
           ssh -o StrictHostKeyChecking=no -i gcp_ssh_key ${{ secrets.GCP_USERNAME }}@${{ secrets.GCP_STATIC_IP }} "
             sudo docker container rm -f ${{ secrets.CONTAINER_NAME }} || true &&
             sudo docker image rm -f ${{ secrets.REGISTRY_USER }}/${{ secrets.IMAGE_NAME }}:${{ secrets.IMAGE_TAG }} || true &&
-            sudo docker run --name ${{ secrets.CONTAINER_NAME }} -d -p 80:8080 ${{ secrets.REGISTRY_USER }}/${{ secrets.IMAGE_NAME }}:${{ secrets.IMAGE_TAG }}"
+            sudo docker run -v /var/run/docker.sock:/var/run/docker.sock --name ${{ secrets.CONTAINER_NAME }} -d -p 80:8080 ${{ secrets.REGISTRY_USER }}/${{ secrets.IMAGE_NAME }}:${{ secrets.IMAGE_TAG }}"
