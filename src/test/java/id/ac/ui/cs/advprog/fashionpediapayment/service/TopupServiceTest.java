@@ -1,6 +1,7 @@
 package id.ac.ui.cs.advprog.fashionpediapayment.service;
 
 
+import id.ac.ui.cs.advprog.fashionpediapayment.exceptions.TopupException;
 import id.ac.ui.cs.advprog.fashionpediapayment.model.Topup;
 import id.ac.ui.cs.advprog.fashionpediapayment.repository.TopupRepository;
 
@@ -14,6 +15,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.DirtiesContext;
 
 import java.sql.Timestamp;
 import java.time.format.DateTimeFormatter;
@@ -21,10 +23,12 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.springframework.test.annotation.DirtiesContext.ClassMode.AFTER_CLASS;
 
 @ExtendWith(MockitoExtension.class)
 @SpringBootTest
 @Transactional
+@DirtiesContext(classMode = AFTER_CLASS)
 public class TopupServiceTest {
     @InjectMocks
     @Autowired
@@ -52,7 +56,7 @@ public class TopupServiceTest {
     }
 
     @Test
-    void testCreateTopupWithoutPhoto () {
+    void testCreateTopupWithoutPhoto () throws TopupException {
         Topup topup =  topupService.createTopup(
         "test_buyer3", "Transfer dengan QRIS",
         "Gopay", "081234567890", 20000,null);
@@ -68,7 +72,7 @@ public class TopupServiceTest {
     }
 
     @Test
-    void testCreateTopupWithPhoto () {
+    void testCreateTopupWithPhoto () throws TopupException {
         Topup topup =  topupService.createTopup(
         "test_buyer4", "Transfer dengan Kartu Kredit",
         "Mastercard", "41242852932021", 120000,
@@ -87,7 +91,7 @@ public class TopupServiceTest {
 
 
     @Test
-    void testGetAllTopups()  {
+    void testGetAllTopups() throws TopupException {
         List<Topup> topups = topupService.getTopups(null, null, null);
         System.out.println(topups);
         assertNotNull(topups);
@@ -95,7 +99,7 @@ public class TopupServiceTest {
     }
 
     @Test
-    void testGetAllTopupsWithBuyerID()  {
+    void testGetAllTopupsWithBuyerID() throws TopupException {
         List<Topup> topups = topupService.getTopups("test_buyer1", null, null);
         assertNotNull(topups);
         assertEquals(topups.size(), 1);
@@ -105,7 +109,7 @@ public class TopupServiceTest {
     }
 
     @Test
-    void testCancelTopup()  {
+    void testCancelTopup() throws TopupException {
         List<Topup> topups = topupService.getTopups("test_buyer1", null, null);
         Topup topup1 = topups.getFirst();
         topup1 = topupService.cancelTopup(topup1.getTopupId());
@@ -113,7 +117,30 @@ public class TopupServiceTest {
     }
 
     @Test
-    void testFilterByApproval() {
+    void testCancelTopupTwice() throws TopupException {
+        List<Topup> topups = topupService.getTopups("test_buyer1", null, null);
+        Topup topup1 = topups.getFirst();
+        topup1 = topupService.cancelTopup(topup1.getTopupId());
+        Topup finalTopup = topup1;
+        TopupException e = assertThrows(TopupException.class, () ->
+                topupService.cancelTopup(finalTopup.getTopupId()));
+        assertEquals(2821, e.getErrorCode());
+    }
+
+    @Test
+    void testCancelApprovedTopup() throws TopupException {
+        List<Topup> topups = topupService.getTopups("test_buyer1", null, null);
+        Topup topup1 = topups.getFirst();
+        topup1.setApproval("APPROVED");
+        topupRepository.save(topup1);
+
+        TopupException e = assertThrows(TopupException.class, () ->
+                topupService.cancelTopup(topup1.getTopupId()));
+        assertEquals(2822, e.getErrorCode());
+    }
+
+    @Test
+    void testFilterByApproval() throws TopupException {
         Topup test_topup = topupService.cancelTopup(topup2.getTopupId());
         System.out.println(test_topup);
 
@@ -125,7 +152,7 @@ public class TopupServiceTest {
     }
 
     @Test
-    void testFilterByDate()  {
+    void testFilterByDate() throws TopupException {
         Topup topup =  topupService.createTopup(
                 "test_buyer3", "Transfer dengan QRIS",
                 "Gopay", "081234567890", 20000,null);
@@ -148,10 +175,29 @@ public class TopupServiceTest {
     }
 
     @Test
-    void testDeleteTopup()  {
+    void testFilterWrongDate() throws TopupException {
+        topupService.createTopup(
+                "test_buyer3", "Transfer dengan QRIS",
+                "Gopay", "081234567890", 20000,null);
+
+        TopupException e = assertThrows(TopupException.class, () ->
+            topupService.getTopups(null, null, "2022/06/14 11.11.11"));
+
+        assertEquals(2800, e.getErrorCode());
+    }
+
+    @Test
+    void testDeleteTopup() throws TopupException {
         topupService.deleteTopup(repoTopup2.getTopupId());
 
         List<Topup> topups = topupService.getTopups("test_buyer2", null, null);
         assertEquals(0, topups.size());
+    }
+
+    @Test
+    void testDeleteTopupDoesntExist() throws TopupException {
+        TopupException e = assertThrows(TopupException.class, () ->
+            topupService.deleteTopup("this id oejfoewjfoewjwmdf"));
+        assertEquals(2820, e.getErrorCode());
     }
 }
