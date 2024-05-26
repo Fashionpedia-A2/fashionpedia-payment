@@ -58,8 +58,10 @@ jobs:
 
       - name: Set up environment
         run: |
-          export GRADLE_USER_HOME=$HOME/.gradle
-          export SPRING_PROFILES_ACTIVE=test
+          touch .env
+          echo "GRADLE_USER_HOME=$HOME/.gradle
+          SPRING_PROFILES_ACTIVE=test
+          PRODUCTION=${{ secrets.PRODUCTION }}" > .env
 
       - name: Test with Gradle
         run: |
