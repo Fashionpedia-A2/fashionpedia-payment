@@ -1,6 +1,8 @@
 package id.ac.ui.cs.advprog.fashionpediapayment.service;
 
 import id.ac.ui.cs.advprog.fashionpediapayment.builder.TopupBuilder;
+import id.ac.ui.cs.advprog.fashionpediapayment.exceptions.PaymentServiceException;
+import id.ac.ui.cs.advprog.fashionpediapayment.exceptions.TopupException;
 import id.ac.ui.cs.advprog.fashionpediapayment.model.Topup;
 import id.ac.ui.cs.advprog.fashionpediapayment.repository.TopupRepository;
 import jakarta.transaction.Transactional;
@@ -27,7 +29,8 @@ public class TopupService {
     final static DateTimeFormatter dateTimeFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     public Topup createTopup (
-            String buyerId, String method, String bankName, String accountNumber, long nominal, String photoProof) {
+            String buyerId, String method, String bankName, String accountNumber, long nominal, String photoProof)
+            throws TopupException {
         TopupBuilder topupBuilder = new TopupBuilder()
                 .setBuyerId(buyerId)
                 .setMethod(method)
@@ -43,14 +46,15 @@ public class TopupService {
         return topup;
     }
 
-    public List<Topup> getTopups(String buyerId, String approval, String afterDate) {
+    public List<Topup> getTopups(String buyerId, String approval, String afterDate)
+            throws TopupException{
         double seconds = 0;
         if (afterDate != null) {
             LocalDateTime localDateTime;
             try {
                 localDateTime = LocalDateTime.parse(afterDate, dateTimeFormat);
             } catch (DateTimeParseException e) {
-                return new ArrayList<>();
+                throw new TopupException(TopupException.TopupExceptionType.WrongOrEmptyFields);
             }
             Timestamp timestamp = Timestamp.valueOf(localDateTime);
             System.out.println(timestamp);
@@ -61,20 +65,31 @@ public class TopupService {
         );
     }
 
-    public Topup cancelTopup(String topupId) {
+    public Topup cancelTopup(String topupId)
+            throws TopupException {
         Topup topup = topupRepository.findById(topupId).orElse(null);
-        if (topup != null) {
-            topup.setApproval("CANCELLED");
-            topup = topupRepository.save(topup);
+        if (topup == null) {
+            throw new TopupException(TopupException.TopupExceptionType.TopupIdDoesNotExist);
         }
+        if (topup.getApproval().equals("CANCELLED")) {
+            throw new TopupException(TopupException.TopupExceptionType.TopupAlreadyCancelled);
+        }
+        if (!topup.getApproval().equals("PENDING")) {
+            throw new TopupException(TopupException.TopupExceptionType.TopupCannotBeCancelled);
+        }
+        topup.setApproval("CANCELLED");
+        topup = topupRepository.save(topup);
         return topup;
     }
 
-    public Topup deleteTopup(String topupId) {
+    public Topup deleteTopup(String topupId)
+            throws TopupException{
         Topup topup = topupRepository.findById(topupId).orElse(null);
-        if (topup != null) {
-            topupRepository.delete(topup);
+        if (topup == null) {
+            throw new TopupException(TopupException.TopupExceptionType.TopupIdDoesNotExist);
         }
+
+        topupRepository.delete(topup);
         return topup;
     }
 }
